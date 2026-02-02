@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瑞鑫摸彩活動</title>
+    <style>
+        :root {
+            --gold: #ffcc00;
+            --gold-glow: rgba(255, 204, 0, 0.6);
+            --red: #ff3e3e;
+            --panel-bg: #222;
+            --reel-bg: #ffffff;
+            --icon-height: 120px; 
+        }
+
+        body {
+            background-color: #111;
+            color: white;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 頂部庫存面板 */
+        .admin-panel {
+            background: #333;
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 2px solid var(--gold);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        .admin-panel input {
+            width: 60px;
+            background: #000;
+            color: var(--gold);
+            border: 1px solid #555;
+            padding: 5px;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .machine-container {
+            position: relative;
+            background: linear-gradient(145deg, #444, #111);
+            padding: 40px;
+            border-radius: 30px;
+            border: 10px solid #333;
+            box-shadow: 0 0 50px #000, inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .machine-logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold);
+            margin-bottom: 20px;
+            letter-spacing: 10px;
+        }
+
+        .slot-window {
+            display: flex;
+            gap: 15px;
+            background: #000;
+            padding: 15px;
+            border-radius: 15px;
+            border: 4px solid #555;
+            overflow: hidden;
+        }
+
+        .reel-box {
+            width: 100px;
+            height: var(--icon-height);
+            background: var(--reel-bg);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reel-strip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .icon {
+            height: var(--icon-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+
+        .controls {
+            margin-top: 35px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #spin-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: none;
+            background: radial-gradient(circle, #ff5f6d, #ff3131);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #900, 0 10px 20px rgba(0,0,0,0.5);
+            transition: all 0.1s;
+        }
+
+        #spin-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #900, 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        #spin-btn:disabled {
+            filter: grayscale(1);
+            cursor: not-allowed;
+        }
+
+        .stock-tag {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column; /* 讓兩行垂直排列 */
+            align-items: center;
+            gap: 8px; /* 兩行之間的間距 */
+            font-family: 'Microsoft JhengHei', sans-serif;
+        }
+        .main-stats {
+            margin-top: 25px;
+            font-size: 18px;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            letter-spacing: 1px;
+        }
+        #stock-display, #people-display {
+            color: #00ff00; /* 數值部分使用綠色突出 */
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        .rate-stats {
+            margin-top: 5px;
+            font-size: 16px; /* 機率稍微小一點點，看起來更精緻 */
+            color: var(--gold);
+            text-shadow: 0 0 5px 
+            var(--gold-glow);
+        }
+        
+        #rate-display {
+            color: var(--gold); /* 使用金黃色，與庫存的綠色區隔 */
+            font-weight: bold;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .win-announcement {
+            text-align: center;
+            animation: bounce 0.5s infinite alternate;
+        }
+
+        .win-announcement h2 {
+            font-size: 60px;
+            color: var(--gold);
+            margin: 0;
+            text-shadow: 0 0 30px var(--gold);
+        }
+
+        @keyframes bounce {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .close-btn {
+            margin-top: 30px;
+            padding: 10px 30px;
+            font-size: 20px;
+            background: var(--gold);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .spinning {
+            filter: blur(2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-panel">
+        <span>獎品數量：</span>
+        <input type="number" id="prize-input" value="15">
+        <span>抽獎人數：</span>
+        <input type="number" id="people-input" value="30">
+        <button onclick="setConfigs()">更新設定</button>
+    </div>
+
+    <div class="machine-container">
+        <div class="machine-logo">PREMIUM SLOT</div>
+        
+        <div class="slot-window">
+            <div class="reel-box"><div id="reel1" class="reel-strip"></div></div>
+            <div class="reel-box"><div id="reel2" class="reel-strip"></div></div>
+            <div class="reel-box"><div id="reel3" class="reel-strip"></div></div>
+        </div>
+
+        <div class="controls">
+            <button id="spin-btn" onclick="handleSpin()">PUSH</button>
+            <div class="main-stats">
+                獎品數量: <span id="stock-display">0</span> | 
+                剩餘人數: <span id="people-display">0</span>
+            </div>
+            <div class="rate-stats">
+                中獎機率： <span id="rate-display">0.0%</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-overlay" class="overlay">
+        <div class="win-announcement">
+            <h2>🎊 WINNER 🎊</h2>
+            <p style="font-size: 24px;">恭喜中獎（三星連線）！</p>
+            <button class="close-btn" onclick="closeWin()">領取禮物</button>
+        </div>
+    </div>
+
+    <div id="lose-overlay" class="overlay">
+        <div class="win-announcement" style="animation: none;"> 
+            <h2 style="color: #888; text-shadow: 0 0 10px #444;">殘念！</h2>
+            <p style="font-size: 24px;">再接再厲，下一位幸運兒就是你！</p>
+            <button class="close-btn" style="background: #555;" onclick="closeLose()">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        const icons = ["⭐","💩","❌","⭐","😢","⚙️","💩","❌","⭐","😢","⚙️","💩","❌"];
+        let stock = 15;
+        let people = 30;
+        const iconHeight = 120;
+        let isSpinning = false;
+
+        function initReels() {
+            const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+            reels.forEach(reel => {
+                let content = "";
+                for(let i=0; i<30; i++) {
+                    const icon = icons[Math.floor(Math.random() * icons.length)];
+                    content += `<div class="icon">${icon}</div>`;
+                }
+                reel.innerHTML = content;
+            });
+        }
+
+        // 修改設定函式
+        function setConfigs() {
+            stock = parseInt(document.getElementById('prize-input').value) || 0;
+            people = parseInt(document.getElementById('people-input').value) || 0;
+
+            if (stock > people) {
+                alert("警告：獎品數大於人數，中獎率將超過 100%！");
+            }
+            updateDisplay();
+            alert("設定已更新！");
+        }
+
+        async function handleSpin() {
+            if (isSpinning) return;
+            
+            // 檢查人數是否足夠
+            if (people <= 0) {
+                alert("抽獎人數已達上限！");
+                return;
+            }
+            
+            isSpinning = true;
+            document.getElementById('spin-btn').disabled = true;
+
+            // 計算當前中獎機率：剩餘獎品 / 剩餘人數
+            const winProbability = people > 0 ? (stock / people) : 0;
+
+            // 決定結果：亂數小於計算出的機率即中獎
+            const willWin = (stock > 0 && Math.random() < winProbability);
+
+            // (選擇性) 在控制台觀察機率變化，方便除錯
+            console.log(`目前機率: ${(winProbability * 100).toFixed(2)}%`);
+            
+            const reels = [
+                { el: document.getElementById('reel1') },
+                { el: document.getElementById('reel2') },
+                { el: document.getElementById('reel3') }
+            ];
+
+            reels.forEach((reel, i) => {
+                const strip = reel.el;
+                strip.classList.add('spinning');
+                
+                let targetIdx = 25;
+                if (willWin) {
+                    strip.children[targetIdx].innerText = "⭐";
+                } else {
+                    // 沒中獎時，確保三格不完全一樣
+                    const tempIcons = ["💩", "😢", "⚙️", "❌"]; 
+                    strip.children[targetIdx].innerText = tempIcons[(i + Math.floor(Math.random() * 3)) % tempIcons.length];
+                }
+
+                const offset = targetIdx * iconHeight;
+                strip.style.transition = `transform ${2 + i * 0.5}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
+                strip.style.transform = `translateY(-${offset}px)`;
+            });
+
+            setTimeout(() => {
+                reels.forEach(r => r.el.classList.remove('spinning'));
+                
+                // --- 邏輯核心：不論有無中獎都扣人數 ---
+                people--; 
+
+                if (willWin) {
+                    stock--; // 中獎額外扣庫存
+                    document.getElementById('win-overlay').style.display = 'flex';
+                } else {
+                    document.getElementById('lose-overlay').style.display = 'flex';
+                }
+                
+                updateDisplay(); // 即時更新畫面數字
+                
+                isSpinning = false;
+                document.getElementById('spin-btn').disabled = false;
+                
+                setTimeout(() => {
+                    reels.forEach(r => {
+                        r.el.style.transition = 'none';
+                        const lastResult = r.el.children[25].innerText;
+                        r.el.children[0].innerText = lastResult;
+                        r.el.style.transform = 'translateY(0)';
+                    });
+                }, 500);
+
+            }, 3500);
+        }
+
+        // 修改顯示更新函式
+        function updateDisplay() {
+            // 1. 更新基礎數值顯示
+            document.getElementById('stock-display').innerText = stock;
+            document.getElementById('people-display').innerText = people;
+            // 2. 更新輸入框數值
+            document.getElementById('prize-input').value = stock;
+            document.getElementById('people-input').value = people;
+            // 3. 計算並更新即時機率
+            let rate = 0;
+            if (people > 0) {
+                rate = Math.min((stock / people ) * 100, 100);
+            }
+            document.getElementById('rate-display').innerText = rate.toFixed(1) + "%";
+        }
+
+        function closeLose() {
+            document.getElementById('lose-overlay').style.display = 'none';
+        }
+
+        function closeWin() {
+            document.getElementById('win-overlay').style.display = 'none';
+        }
+
+        initReels();
+    </script>
+</body>
+</html>
